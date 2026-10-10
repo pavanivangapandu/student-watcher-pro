@@ -128,33 +128,37 @@ function SessionScanner({ session, onBack }: { session: Session; onBack: () => v
     <div>
       <Button variant="ghost" onClick={onBack}>← All sessions</Button>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold">{session.classroom} {session.subject && <span className="text-muted-foreground text-xl">· {session.subject}</span>}</h1>
-        <div className="flex items-center gap-3">
-          <Badge className="text-base">{list.length} present</Badge>
-          {open && <Button variant="outline" onClick={close}>Close session</Button>}
-        </div>
+        <h1 className="text-3xl font-bold">Scan station · {session.classroom} {session.subject && <span className="text-muted-foreground text-xl">· {session.subject}</span>}</h1>
+        {open && <Button variant="outline" onClick={close}>Close session</Button>}
       </div>
-      <div className="mt-6 grid gap-6 md:grid-cols-2">
+      <div className="mt-6 grid gap-6 md:grid-cols-[1fr_320px]">
         <div className="rounded-xl bg-card p-6 shadow-card">
           {open ? <>
+            <p className="mb-3 font-medium">Show your ID card to the camera, or type your roll number</p>
             <Camera onScan={submit} />
-            <div className="mt-4 flex gap-2">
-              <Input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Or type roll number" />
-              <Button onClick={() => { if (manual.trim()) { submit(manual.trim()); setManual(""); } }}>Add</Button>
-            </div>
-            {last && <p className={`mt-4 rounded-md p-3 text-sm font-medium ${last.ok ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>{last.text}</p>}
+            <form className="mt-4 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (manual.trim()) { submit(manual.trim()); setManual(""); } }}>
+              <Input autoFocus className="h-12 text-lg" value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Type roll number and press Enter" />
+              <Button type="submit" className="h-12">Enter</Button>
+            </form>
+            {last && <p className={`mt-4 rounded-md p-4 text-lg font-semibold ${last.ok ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}>{last.text}</p>}
           </> : <p className="text-muted-foreground">This session is closed. No more scans accepted.</p>}
         </div>
-        <div className="rounded-xl bg-card p-6 shadow-card">
-          <h2 className="font-bold text-lg">Present students</h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            {list.map((a) => (
-              <li key={a.student_id} className="flex justify-between border-t pt-2">
-                <span>{a.name || "—"} <span className="text-muted-foreground">{a.roll}</span></span>
-                <span className="text-muted-foreground">{new Date(a.scanned_at).toLocaleTimeString()}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="space-y-6">
+          <div className="rounded-xl bg-primary p-6 text-center text-primary-foreground shadow-card">
+            <p className="text-sm uppercase tracking-wide opacity-80">Total ID cards scanned</p>
+            <p className="font-display text-7xl font-bold">{list.length}</p>
+          </div>
+          <div className="rounded-xl bg-card p-6 shadow-card">
+            <h2 className="font-bold text-lg">Recent scans</h2>
+            <ul className="mt-3 space-y-2 text-sm max-h-96 overflow-y-auto">
+              {list.map((a) => (
+                <li key={a.student_id} className="flex justify-between border-t pt-2">
+                  <span>{a.name || "—"} <span className="text-muted-foreground">{a.roll}</span></span>
+                  <span className="text-muted-foreground">{new Date(a.scanned_at).toLocaleTimeString()}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </div>
