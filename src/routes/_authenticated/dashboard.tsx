@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser, type AppRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { FacultyAttendance, StudentIdCard } from "@/components/attendance";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -48,11 +49,13 @@ function Dashboard() {
         {loading ? (
           <p className="text-muted-foreground">Loading…</p>
         ) : role === "admin" ? (
-          <AdminPanel />
+          <div className="space-y-12"><AdminPanel />{user && <FacultyAttendance userId={user.id} />}</div>
         ) : role === "faculty" ? (
-          <Placeholder title="Faculty dashboard" text="Classroom sessions, live scan counts and missing-student lists will appear here." />
+          user && <FacultyAttendance userId={user.id} />
+        ) : user ? (
+          <StudentIdCard userId={user.id} name={(user.user_metadata?.['full_name'] as string) ?? ""} roll={(user.user_metadata?.['roll_number'] as string) ?? null} />
         ) : (
-          <Placeholder title="Student dashboard" text="Your ID scanning and attendance history will appear here." />
+          <Placeholder title="Student dashboard" text="Please sign in again." />
         )}
       </main>
     </div>

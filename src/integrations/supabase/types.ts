@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          id: string
+          scanned_at: string
+          scanned_by: string
+          session_id: string
+          student_id: string
+        }
+        Insert: {
+          id?: string
+          scanned_at?: string
+          scanned_by: string
+          session_id: string
+          student_id: string
+        }
+        Update: {
+          id?: string
+          scanned_at?: string
+          scanned_by?: string
+          session_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "class_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_sessions: {
+        Row: {
+          classroom: string
+          created_at: string
+          faculty_id: string
+          id: string
+          is_open: boolean
+          subject: string
+        }
+        Insert: {
+          classroom: string
+          created_at?: string
+          faculty_id: string
+          id?: string
+          is_open?: boolean
+          subject?: string
+        }
+        Update: {
+          classroom?: string
+          created_at?: string
+          faculty_id?: string
+          id?: string
+          is_open?: boolean
+          subject?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -67,6 +126,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      record_scan: {
+        Args: { _code: string; _session_id: string }
+        Returns: Json
       }
       set_user_role: {
         Args: {
