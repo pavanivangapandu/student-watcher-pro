@@ -26,6 +26,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [roll, setRoll] = useState("");
+  const [signupRole, setSignupRole] = useState<"student" | "faculty">("student");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -43,7 +44,7 @@ function AuthPage() {
         password,
         options: {
           emailRedirectTo: window.location.origin,
-          data: { full_name: fullName, roll_number: roll },
+          data: { full_name: fullName, roll_number: roll, requested_role: signupRole },
         },
       });
       setBusy(false);
@@ -80,13 +81,34 @@ function AuthPage() {
             <>
               <h1 className="text-3xl font-bold">{mode === "signin" ? "Welcome back" : "Create account"}</h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {mode === "signin" ? "Sign in to continue." : "New accounts start as students. Admins assign faculty roles."}
+                {mode === "signin" ? "Sign in to continue." : "Choose Student or Faculty below. Admins can change roles later."}
               </p>
               <form onSubmit={submit} className="mt-6 space-y-4">
                 {mode === "signup" && (
                   <>
                     <div className="space-y-1.5"><Label htmlFor="n">Full name</Label><Input id="n" required value={fullName} onChange={(e) => setFullName(e.target.value)} /></div>
-                    <div className="space-y-1.5"><Label htmlFor="r">Roll number (students)</Label><Input id="r" value={roll} onChange={(e) => setRoll(e.target.value)} /></div>
+                    <div className="space-y-1.5">
+                      <Label>I am a</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {(["student", "faculty"] as const).map((r) => (
+                          <button
+                            key={r}
+                            type="button"
+                            onClick={() => setSignupRole(r)}
+                            className={`rounded-md border px-3 py-2 text-sm font-medium capitalize transition-colors ${
+                              signupRole === r
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-input bg-background text-foreground hover:bg-accent"
+                            }`}
+                          >
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {signupRole === "student" && (
+                      <div className="space-y-1.5"><Label htmlFor="r">Roll number</Label><Input id="r" required value={roll} onChange={(e) => setRoll(e.target.value)} /></div>
+                    )}
                   </>
                 )}
                 <div className="space-y-1.5"><Label htmlFor="e">Email</Label><Input id="e" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
