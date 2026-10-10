@@ -53,7 +53,7 @@ function Dashboard() {
         ) : role === "faculty" ? (
           user && <FacultyAttendance userId={user.id} />
         ) : user ? (
-          <StudentIdCard userId={user.id} name={(user.user_metadata?.full_name as string) ?? ""} roll={(user.user_metadata?.roll_number as string) ?? null} />
+          <StudentIdCard userId={user.id} name={(user.user_metadata?.['full_name'] as string) ?? ""} roll={(user.user_metadata?.['roll_number'] as string) ?? null} />
         ) : (
           <Placeholder title="Student dashboard" text="Please sign in again." />
         )}

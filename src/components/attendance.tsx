@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 type Session = { id: string; classroom: string; subject: string; is_open: boolean; created_at: string };
-type Att = { student_id: string; scanned_at: string; name?: string; roll?: string | null };
+type Att = { student_id: string; scanned_at: string; name?: string | undefined; roll?: string | null | undefined };
 
 export function StudentIdCard({ userId, name, roll }: { userId: string; name: string; roll: string | null }) {
   const [history, setHistory] = useState<{ scanned_at: string; session_id: string }[]>([]);
@@ -53,10 +53,10 @@ export function FacultyAttendance({ userId }: { userId: string }) {
   useEffect(() => { load(); }, []);
 
   const create = async () => {
-    if (!classroom.trim()) return toast.error("Enter a classroom");
+    if (!classroom.trim()) { toast.error("Enter a classroom"); return; }
     const { data, error } = await supabase.from("class_sessions")
       .insert({ classroom: classroom.trim(), subject: subject.trim(), faculty_id: userId }).select().single();
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setClassroom(""); setSubject(""); setActive(data); load();
   };
 
@@ -120,7 +120,7 @@ function SessionScanner({ session, onBack }: { session: Session; onBack: () => v
 
   const close = async () => {
     const { error } = await supabase.from("class_sessions").update({ is_open: false }).eq("id", session.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setOpen(false); toast.success("Session closed");
   };
 
