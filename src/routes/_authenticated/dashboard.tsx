@@ -84,7 +84,7 @@ function AdminPanel() {
 
   const change = async (id: string, role: AppRole) => {
     const { error } = await supabase.rpc("set_user_role", { _user_id: id, _role: role });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Role updated");
     load();
   };
