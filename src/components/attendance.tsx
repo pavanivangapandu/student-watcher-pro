@@ -146,6 +146,15 @@ function SessionScanner({ session, onBack }: { session: Session; onBack: () => v
     setOpen(false); toast.success("Session closed");
   };
 
+  const unmark = async (r: RosterRow) => {
+    const { error } = await supabase.from("attendance").delete()
+      .eq("session_id", session.id).eq("student_id", r.id);
+    if (error) { toast.error(error.message); return; }
+    setLast({ ok: false, text: `${r.full_name || "Student"} (${r.roll_number}) moved to absent` });
+    toast.warning(`Marked absent: ${r.roll_number}`);
+    load();
+  };
+
   return (
     <div>
       <Button variant="ghost" onClick={onBack}>← All sessions</Button>
@@ -200,7 +209,9 @@ function SessionScanner({ session, onBack }: { session: Session; onBack: () => v
                       <td>{r.full_name || "—"}</td>
                       <td className="text-right">
                         {presentIds.has(r.id)
-                          ? <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary font-bold">✓</span>
+                          ? <button type="button" onClick={() => unmark(r)} title="Uncheck to mark absent"
+                              aria-label={`Mark ${r.roll_number} absent`}
+                              className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary font-bold transition-colors hover:bg-destructive/15 hover:text-destructive">✓</button>
                           : <span className="text-muted-foreground">—</span>}
                       </td>
                     </tr>
