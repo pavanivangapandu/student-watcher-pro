@@ -48,28 +48,40 @@ export type Database = {
       }
       class_sessions: {
         Row: {
+          branch: string
           classroom: string
           created_at: string
           faculty_id: string
           id: string
           is_open: boolean
+          section: string
+          semester: string
           subject: string
+          year: string
         }
         Insert: {
+          branch?: string
           classroom: string
           created_at?: string
           faculty_id: string
           id?: string
           is_open?: boolean
+          section?: string
+          semester?: string
           subject?: string
+          year?: string
         }
         Update: {
+          branch?: string
           classroom?: string
           created_at?: string
           faculty_id?: string
           id?: string
           is_open?: boolean
+          section?: string
+          semester?: string
           subject?: string
+          year?: string
         }
         Relationships: []
       }
@@ -94,6 +106,39 @@ export type Database = {
           full_name?: string
           id?: string
           roll_number?: string | null
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          branch: string
+          created_at: string
+          full_name: string
+          id: string
+          roll_number: string
+          section: string
+          semester: string
+          year: string
+        }
+        Insert: {
+          branch?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          roll_number: string
+          section?: string
+          semester?: string
+          year?: string
+        }
+        Update: {
+          branch?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          roll_number?: string
+          section?: string
+          semester?: string
+          year?: string
         }
         Relationships: []
       }

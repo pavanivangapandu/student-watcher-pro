@@ -22,6 +22,20 @@
       "when": 1791644314839,
       "tag": "0002_faculty_role_at_signup",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791703380666,
+      "tag": "0003_class_roster",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791703412112,
+      "tag": "0004_students_roll_unique_plain",
+      "breakpoints": true
     }
   ]
 }

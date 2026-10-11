@@ -5,8 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ClassFields, classLabel, type ClassSel } from "@/components/class-fields";
 
-type Session = { id: string; classroom: string; subject: string; is_open: boolean; created_at: string };
+type Session = { id: string; classroom: string; subject: string; is_open: boolean; created_at: string } & ClassSel;
 type Att = { student_id: string; scanned_at: string; name?: string | undefined; roll?: string | null | undefined };
 
 export function StudentIdCard({ userId, name, roll }: { userId: string; name: string; roll: string | null }) {
@@ -44,6 +45,7 @@ export function FacultyAttendance({ userId }: { userId: string }) {
   const [active, setActive] = useState<Session | null>(null);
   const [classroom, setClassroom] = useState("");
   const [subject, setSubject] = useState("");
+  const [cls, setCls] = useState<ClassSel>({ branch: "", year: "", semester: "", section: "" });
 
   const load = async () => {
     const { data } = await supabase.from("class_sessions").select("*").eq("faculty_id", userId)
@@ -54,8 +56,9 @@ export function FacultyAttendance({ userId }: { userId: string }) {
 
   const create = async () => {
     if (!classroom.trim()) { toast.error("Enter a classroom"); return; }
+    if (!cls.branch || !cls.year || !cls.semester || !cls.section) { toast.error("Select branch, year, sem and sec"); return; }
     const { data, error } = await supabase.from("class_sessions")
-      .insert({ classroom: classroom.trim(), subject: subject.trim(), faculty_id: userId }).select().single();
+      .insert({ classroom: classroom.trim(), subject: subject.trim(), faculty_id: userId, ...cls }).select().single();
     if (error) { toast.error(error.message); return; }
     setClassroom(""); setSubject(""); setActive(data); load();
   };
@@ -68,12 +71,13 @@ export function FacultyAttendance({ userId }: { userId: string }) {
       <div className="mt-6 rounded-xl bg-card p-6 shadow-card flex flex-wrap gap-3 items-end">
         <div className="flex-1 min-w-40"><label className="text-sm">Classroom</label><Input value={classroom} onChange={(e) => setClassroom(e.target.value)} placeholder="e.g. Room 204" /></div>
         <div className="flex-1 min-w-40"><label className="text-sm">Subject</label><Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. DBMS" /></div>
+        <ClassFields value={cls} onChange={setCls} />
         <Button onClick={create}>Start session</Button>
       </div>
       <div className="mt-6 space-y-2">
         {sessions.map((s) => (
           <button key={s.id} onClick={() => setActive(s)} className="w-full text-left rounded-lg bg-card p-4 shadow-card flex justify-between items-center hover:bg-muted">
-            <span><span className="font-semibold">{s.classroom}</span> {s.subject && `· ${s.subject}`}
+            <span><span className="font-semibold">{s.classroom}</span> {s.subject && `· ${s.subject}`} {classLabel(s) && `· ${classLabel(s)}`}
               <span className="block text-xs text-muted-foreground">{new Date(s.created_at).toLocaleString()}</span></span>
             <Badge variant={s.is_open ? "default" : "secondary"}>{s.is_open ? "Open" : "Closed"}</Badge>
           </button>
@@ -95,10 +99,15 @@ function SessionScanner({ session, onBack }: { session: Session; onBack: () => v
     const { data } = await supabase.from("attendance").select("student_id, scanned_at")
       .eq("session_id", session.id).order("scanned_at", { ascending: false });
     const ids = (data ?? []).map((d) => d.student_id);
-    const { data: profs } = ids.length
-      ? await supabase.from("profiles").select("id, full_name, roll_number").in("id", ids) : { data: [] };
+    const [{ data: profs }, { data: roster }] = ids.length
+      ? await Promise.all([
+          supabase.from("profiles").select("id, full_name, roll_number").in("id", ids),
+          supabase.from("students").select("id, full_name, roll_number").in("id", ids),
+        ])
+      : [{ data: [] }, { data: [] }];
+    const all = [...(profs ?? []), ...(roster ?? [])];
     setList((data ?? []).map((d) => {
-      const p = profs?.find((x) => x.id === d.student_id);
+      const p = all.find((x) => x.id === d.student_id);
       return { ...d, name: p?.full_name, roll: p?.roll_number };
     }));
   };
@@ -128,7 +137,7 @@ function SessionScanner({ session, onBack }: { session: Session; onBack: () => v
     <div>
       <Button variant="ghost" onClick={onBack}>← All sessions</Button>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold">Scan station · {session.classroom} {session.subject && <span className="text-muted-foreground text-xl">· {session.subject}</span>}</h1>
+        <h1 className="text-3xl font-bold">Scan station · {session.classroom} {session.subject && <span className="text-muted-foreground text-xl">· {session.subject}</span>}<span className="block text-lg text-muted-foreground">{classLabel(session)}</span></h1>
         {open && <Button variant="outline" onClick={close}>Close session</Button>}
       </div>
       <div className="mt-6 grid gap-6 md:grid-cols-[1fr_320px]">

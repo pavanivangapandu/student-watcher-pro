@@ -1,0 +1,1 @@
+ALTER TABLE public.students ADD CONSTRAINT students_roll_number_key UNIQUE (roll_number);
