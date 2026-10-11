@@ -8,6 +8,7 @@ import { useCurrentUser, type AppRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FacultyAttendance, StudentIdCard } from "@/components/attendance";
+import { StudentRoster } from "@/components/student-roster";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -49,9 +50,9 @@ function Dashboard() {
         {loading ? (
           <p className="text-muted-foreground">Loading…</p>
         ) : role === "admin" ? (
-          <div className="space-y-12"><AdminPanel />{user && <FacultyAttendance userId={user.id} />}</div>
+          <div className="space-y-12"><AdminPanel />{user && <FacultyAttendance userId={user.id} />}<StudentRoster /></div>
         ) : role === "faculty" ? (
-          user && <FacultyAttendance userId={user.id} />
+          user && <div className="space-y-12"><FacultyAttendance userId={user.id} /><StudentRoster /></div>
         ) : user ? (
           <StudentIdCard userId={user.id} name={(user.user_metadata?.['full_name'] as string) ?? ""} roll={(user.user_metadata?.['roll_number'] as string) ?? null} />
         ) : (

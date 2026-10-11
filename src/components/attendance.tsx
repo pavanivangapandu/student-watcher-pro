@@ -137,7 +137,7 @@ function SessionScanner({ session, onBack }: { session: Session; onBack: () => v
     <div>
       <Button variant="ghost" onClick={onBack}>← All sessions</Button>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold">Scan station · {session.classroom} {session.subject && <span className="text-muted-foreground text-xl">· {session.subject}</span>}</h1>
+        <h1 className="text-3xl font-bold">Scan station · {session.classroom} {session.subject && <span className="text-muted-foreground text-xl">· {session.subject}</span>}<span className="block text-lg text-muted-foreground">{classLabel(session)}</span></h1>
         {open && <Button variant="outline" onClick={close}>Close session</Button>}
       </div>
       <div className="mt-6 grid gap-6 md:grid-cols-[1fr_320px]">
