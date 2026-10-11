@@ -87,8 +87,11 @@ export function FacultyAttendance({ userId }: { userId: string }) {
   );
 }
 
+type RosterRow = { id: string; roll_number: string; full_name: string };
+
 function SessionScanner({ session, onBack }: { session: Session; onBack: () => void }) {
   const [list, setList] = useState<Att[]>([]);
+  const [roster, setRoster] = useState<RosterRow[]>([]);
   const [open, setOpen] = useState(session.is_open);
   const [manual, setManual] = useState("");
   const [last, setLast] = useState<{ ok: boolean; text: string } | null>(null);
@@ -96,22 +99,32 @@ function SessionScanner({ session, onBack }: { session: Session; onBack: () => v
   const recent = useRef<{ code: string; t: number }>({ code: "", t: 0 });
 
   const load = async () => {
-    const { data } = await supabase.from("attendance").select("student_id, scanned_at")
-      .eq("session_id", session.id).order("scanned_at", { ascending: false });
+    const [{ data }, { data: classRoster }] = await Promise.all([
+      supabase.from("attendance").select("student_id, scanned_at")
+        .eq("session_id", session.id).order("scanned_at", { ascending: false }),
+      supabase.from("students").select("id, roll_number, full_name")
+        .eq("branch", session.branch).eq("year", session.year)
+        .eq("semester", session.semester).eq("section", session.section)
+        .order("roll_number"),
+    ]);
+    setRoster(classRoster ?? []);
     const ids = (data ?? []).map((d) => d.student_id);
-    const [{ data: profs }, { data: roster }] = ids.length
+    const [{ data: profs }, { data: rosterHits }] = ids.length
       ? await Promise.all([
           supabase.from("profiles").select("id, full_name, roll_number").in("id", ids),
           supabase.from("students").select("id, full_name, roll_number").in("id", ids),
         ])
       : [{ data: [] }, { data: [] }];
-    const all = [...(profs ?? []), ...(roster ?? [])];
+    const all = [...(profs ?? []), ...(rosterHits ?? [])];
     setList((data ?? []).map((d) => {
       const p = all.find((x) => x.id === d.student_id);
       return { ...d, name: p?.full_name, roll: p?.roll_number };
     }));
   };
   useEffect(() => { load(); }, []);
+
+  const presentIds = new Set(list.map((a) => a.student_id));
+  const absent = roster.filter((r) => !presentIds.has(r.id));
 
   const submit = async (code: string) => {
     const now = Date.now();
@@ -170,6 +183,43 @@ function SessionScanner({ session, onBack }: { session: Session; onBack: () => v
           </div>
         </div>
       </div>
+      {roster.length > 0 && (
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
+          <div className="rounded-xl bg-card p-6 shadow-card">
+            <h2 className="font-bold text-lg">Class list · {classLabel(session)}</h2>
+            <p className="text-sm text-muted-foreground">{presentIds.size} present · {absent.length} absent</p>
+            <table className="mt-3 w-full text-sm">
+              <thead className="text-left text-muted-foreground">
+                <tr><th className="py-2">Roll no.</th><th>Name</th><th className="text-right">Present</th></tr>
+              </thead>
+              <tbody>
+                {roster.map((r) => (
+                  <tr key={r.id} className="border-t">
+                    <td className="py-2 font-medium">{r.roll_number}</td>
+                    <td>{r.full_name || "—"}</td>
+                    <td className="text-right">
+                      {presentIds.has(r.id)
+                        ? <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary font-bold">✓</span>
+                        : <span className="text-muted-foreground">—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="rounded-xl bg-card p-6 shadow-card">
+            <h2 className="font-bold text-lg text-destructive">Absent students ({absent.length})</h2>
+            <ul className="mt-3 space-y-2 text-sm max-h-96 overflow-y-auto">
+              {absent.map((r) => (
+                <li key={r.id} className="border-t pt-2">
+                  <span className="font-medium">{r.roll_number}</span> {r.full_name && <span className="text-muted-foreground">· {r.full_name}</span>}
+                </li>
+              ))}
+              {absent.length === 0 && <li className="text-muted-foreground">Everyone is present 🎉</li>}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
