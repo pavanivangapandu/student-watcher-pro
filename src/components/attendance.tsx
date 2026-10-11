@@ -183,6 +183,43 @@ function SessionScanner({ session, onBack }: { session: Session; onBack: () => v
           </div>
         </div>
       </div>
+      {roster.length > 0 && (
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
+          <div className="rounded-xl bg-card p-6 shadow-card">
+            <h2 className="font-bold text-lg">Class list · {classLabel(session)}</h2>
+            <p className="text-sm text-muted-foreground">{presentIds.size} present · {absent.length} absent</p>
+            <table className="mt-3 w-full text-sm">
+              <thead className="text-left text-muted-foreground">
+                <tr><th className="py-2">Roll no.</th><th>Name</th><th className="text-right">Present</th></tr>
+              </thead>
+              <tbody>
+                {roster.map((r) => (
+                  <tr key={r.id} className="border-t">
+                    <td className="py-2 font-medium">{r.roll_number}</td>
+                    <td>{r.full_name || "—"}</td>
+                    <td className="text-right">
+                      {presentIds.has(r.id)
+                        ? <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary font-bold">✓</span>
+                        : <span className="text-muted-foreground">—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="rounded-xl bg-card p-6 shadow-card">
+            <h2 className="font-bold text-lg text-destructive">Absent students ({absent.length})</h2>
+            <ul className="mt-3 space-y-2 text-sm max-h-96 overflow-y-auto">
+              {absent.map((r) => (
+                <li key={r.id} className="border-t pt-2">
+                  <span className="font-medium">{r.roll_number}</span> {r.full_name && <span className="text-muted-foreground">· {r.full_name}</span>}
+                </li>
+              ))}
+              {absent.length === 0 && <li className="text-muted-foreground">Everyone is present 🎉</li>}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
