@@ -5,7 +5,7 @@ export const SECS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 export type ClassSel = { branch: string; year: string; semester: string; section: string };
 
-function Sel({ label, value, opts, onChange, any }: { label: string; value: string; opts: string[]; onChange: (v: string) => void; any?: boolean }) {
+function Sel({ label, value, opts, onChange, any }: { label: string; value: string; opts: string[]; onChange: (v: string) => void; any?: boolean | undefined }) {
   return (
     <div className="min-w-28">
       <label className="text-sm">{label}</label>
@@ -17,7 +17,7 @@ function Sel({ label, value, opts, onChange, any }: { label: string; value: stri
   );
 }
 
-export function ClassFields({ value, onChange, any }: { value: ClassSel; onChange: (v: ClassSel) => void; any?: boolean }) {
+export function ClassFields({ value, onChange, any }: { value: ClassSel; onChange: (v: ClassSel) => void; any?: boolean | undefined }) {
   return (
     <>
       <Sel label="Branch" value={value.branch} opts={BRANCHES} any={any} onChange={(branch) => onChange({ ...value, branch })} />
