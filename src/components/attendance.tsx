@@ -87,8 +87,11 @@ export function FacultyAttendance({ userId }: { userId: string }) {
   );
 }
 
+type RosterRow = { id: string; roll_number: string; full_name: string };
+
 function SessionScanner({ session, onBack }: { session: Session; onBack: () => void }) {
   const [list, setList] = useState<Att[]>([]);
+  const [roster, setRoster] = useState<RosterRow[]>([]);
   const [open, setOpen] = useState(session.is_open);
   const [manual, setManual] = useState("");
   const [last, setLast] = useState<{ ok: boolean; text: string } | null>(null);
@@ -96,22 +99,32 @@ function SessionScanner({ session, onBack }: { session: Session; onBack: () => v
   const recent = useRef<{ code: string; t: number }>({ code: "", t: 0 });
 
   const load = async () => {
-    const { data } = await supabase.from("attendance").select("student_id, scanned_at")
-      .eq("session_id", session.id).order("scanned_at", { ascending: false });
+    const [{ data }, { data: classRoster }] = await Promise.all([
+      supabase.from("attendance").select("student_id, scanned_at")
+        .eq("session_id", session.id).order("scanned_at", { ascending: false }),
+      supabase.from("students").select("id, roll_number, full_name")
+        .eq("branch", session.branch).eq("year", session.year)
+        .eq("semester", session.semester).eq("section", session.section)
+        .order("roll_number"),
+    ]);
+    setRoster(classRoster ?? []);
     const ids = (data ?? []).map((d) => d.student_id);
-    const [{ data: profs }, { data: roster }] = ids.length
+    const [{ data: profs }, { data: rosterHits }] = ids.length
       ? await Promise.all([
           supabase.from("profiles").select("id, full_name, roll_number").in("id", ids),
           supabase.from("students").select("id, full_name, roll_number").in("id", ids),
         ])
       : [{ data: [] }, { data: [] }];
-    const all = [...(profs ?? []), ...(roster ?? [])];
+    const all = [...(profs ?? []), ...(rosterHits ?? [])];
     setList((data ?? []).map((d) => {
       const p = all.find((x) => x.id === d.student_id);
       return { ...d, name: p?.full_name, roll: p?.roll_number };
     }));
   };
   useEffect(() => { load(); }, []);
+
+  const presentIds = new Set(list.map((a) => a.student_id));
+  const absent = roster.filter((r) => !presentIds.has(r.id));
 
   const submit = async (code: string) => {
     const now = Date.now();
